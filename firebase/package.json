@@ -1,0 +1,23 @@
+{
+  "name": "momentum-firebase-emulator",
+  "private": true,
+  "description": "Emulator-only Firebase layer for Momentum. Never deployed. Project id demo-momentum.",
+  "scripts": {
+    "emulators": "firebase emulators:start --project demo-momentum",
+    "test:rules": "firebase emulators:exec --project demo-momentum --only firestore \"jest --runInBand\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "firebase": "^13.1.0",
+    "firebase-tools": "^15.34.1",
+    "jest": "^30.5.2",
+    "ts-jest": "^29.4.15",
+    "typescript": "~6.0.3",
+    "@types/jest": "^30.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.ts"]
+  }
+}

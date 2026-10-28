@@ -1,0 +1,123 @@
+rules_version = '2';
+
+// Firestore Security Rules for Momentum. Mirrors the authorization enforced by the local
+// MockBackend (src/backend). Tested ONLY against the local emulator (project "demo-momentum").
+//
+// Principles:
+//  - Users can only read/write their own content (userId == request.auth.uid).
+//  - Money-related documents (subscriptions, transactions, refunds decisions, orders, commissions,
+//    referral rewards) are written ONLY by trusted server code (Cloud Functions / Admin SDK),
+//    never directly by clients.
+//  - Admin access comes from a custom claim set server-side, never from a client-writable field.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function ownsExisting() { return isOwner(resource.data.userId); }
+    function ownsIncoming() { return isOwner(request.resource.data.userId); }
+    function unchanged(field) { return request.resource.data[field] == resource.data[field]; }
+    function isString(v, max) { return v is string && v.size() <= max; }
+
+    // ---------- profiles ----------
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'createdAt', 'referralCode'])
+        && isString(request.resource.data.displayName, 40);
+      // Users may rename themselves; role/disabled/attribution are server-managed.
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName'])
+        && isString(request.resource.data.displayName, 40);
+      allow delete: if false;
+    }
+
+    // ---------- user content ----------
+    match /habits/{id} {
+      allow read: if ownsExisting();
+      allow create: if ownsIncoming()
+        && isString(request.resource.data.name, 80)
+        && request.resource.data.color.matches('^#[0-9a-fA-F]{6}$')
+        && request.resource.data.days is list && request.resource.data.days.size() <= 7;
+      allow update: if ownsExisting() && unchanged('userId')
+        && isString(request.resource.data.name, 80);
+      allow delete: if ownsExisting();
+    }
+
+    match /checkIns/{id} {
+      allow read: if ownsExisting();
+      // Deterministic id "<habitId>_<day>" makes duplicates impossible; the habit must be the caller's.
+      allow create: if ownsIncoming()
+        && id == request.resource.data.habitId + '_' + request.resource.data.day
+        && get(/databases/$(database)/documents/habits/$(request.resource.data.habitId)).data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if ownsExisting();
+    }
+
+    match /goals/{id} {
+      allow read, delete: if ownsExisting();
+      allow create: if ownsIncoming() && isString(request.resource.data.title, 120);
+      allow update: if ownsExisting() && unchanged('userId');
+    }
+
+    match /moods/{id} {
+      allow read, delete: if ownsExisting();
+      allow create, update: if ownsIncoming()
+        && id == request.auth.uid + '_' + request.resource.data.day
+        && request.resource.data.score is int && request.resource.data.score >= 1 && request.resource.data.score <= 5;
+    }
+
+    match /journal/{id} {
+      allow read, delete: if ownsExisting();
+      allow create: if ownsIncoming() && isString(request.resource.data.body, 20000);
+      allow update: if ownsExisting() && unchanged('userId') && isString(request.resource.data.body, 20000);
+    }
+
+    // ---------- billing (server-written) ----------
+    match /subscriptions/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if false; // entitlements change only via verified provider events / functions
+    }
+    match /transactions/{id} {
+      allow read: if ownsExisting() || isAdmin();
+      allow write: if false;
+    }
+    match /refunds/{id} {
+      allow read: if ownsExisting() || isAdmin();
+      allow write: if false; // created/decided via callable functions with eligibility checks
+    }
+
+    // ---------- marketplace ----------
+    match /listings/{id} {
+      allow read: if signedIn() && (resource.data.active == true || isAdmin());
+      allow write: if false; // admin edits go through a callable function (audited)
+    }
+    match /orders/{id} {
+      allow read: if ownsExisting() || isAdmin();
+      allow write: if false; // checkout is a transactional, idempotent callable function
+    }
+
+    // ---------- growth ----------
+    match /referrals/{id} {
+      allow read: if signedIn() && (resource.data.referrerId == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+    match /affiliates/{id} { allow read: if isAdmin(); allow write: if false; }
+    match /campaigns/{id} { allow read: if isAdmin(); allow write: if false; }
+    match /commissions/{id} { allow read: if isAdmin(); allow write: if false; }
+    match /events/{id} { allow read: if isAdmin(); allow write: if false; }
+
+    // ---------- admin ----------
+    match /audit/{id} {
+      allow read: if isAdmin();
+      allow write: if false; // append-only from server code
+    }
+
+    // Deny everything not matched above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

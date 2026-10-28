@@ -1,0 +1,68 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# ---- Momentum: strict secrets & local artifacts ----
+.env
+.env.*
+!.env.example
+*.keystore
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+*-firebase-adminsdk-*.json
+credentials.json
+*.mobileprovision
+*.cer
+*.der
+
+# Firebase emulator / functions build output
+firebase/node_modules/
+firebase/functions/node_modules/
+firebase/functions/lib/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+firebase-export-*/
+
+# Local exports, coverage
+coverage/
+momentum-backup-*.json
