@@ -18,11 +18,13 @@ export default function Today() {
   const { data, derived, loading, reload } = useHabitData();
   const goals = useQuery((b, t) => b.content.goals(t));
   const { run, busy } = useAction();
-  const [tags, setTags] = useState<string[]>([]);
+  // null = untouched: show and keep the tags already logged today.
+  const [tags, setTags] = useState<string[] | null>(null);
 
   if (loading || !data || !derived) return <Loading />;
   const { status, today, moods } = data;
   const todayMood = moods.find((m) => m.day === today);
+  const activeTags = tags ?? todayMood?.tags ?? [];
   const progress = derived.dueToday.length ? derived.doneToday / derived.dueToday.length : 0;
   const date = parseDayKey(today).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
   const activeGoal = goals.data?.find((g) => g.status === 'active');
@@ -84,7 +86,7 @@ export default function Today() {
             return (
               <Pressable
                 key={score}
-                onPress={() => run('mood', (b, t) => b.content.logMood(t, { score, tags, note: todayMood?.note ?? '' }))}
+                onPress={() => run('mood', (b, t) => b.content.logMood(t, { score, tags: activeTags, note: todayMood?.note ?? '' }))}
                 accessibilityRole="button"
                 accessibilityLabel={`Mood ${score} of 5`}
                 accessibilityState={{ selected }}
@@ -96,7 +98,7 @@ export default function Today() {
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: space.md }}>
           {MOOD_TAGS.map((t) => (
-            <Chip key={t} label={t} selected={tags.includes(t) || (!!todayMood?.tags.includes(t) && tags.length === 0)} onPress={() => setTags((xs) => (xs.includes(t) ? xs.filter((x) => x !== t) : [...xs, t]))} />
+            <Chip key={t} label={t} selected={activeTags.includes(t)} onPress={() => setTags(activeTags.includes(t) ? activeTags.filter((x) => x !== t) : [...activeTags, t])} />
           ))}
         </View>
         <Text style={type.small}>{todayMood ? `Logged today: ${MOOD_FACES[todayMood.score]}  Tap a face to update.` : 'Tap a face to log today’s mood.'}</Text>

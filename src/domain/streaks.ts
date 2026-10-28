@@ -1,4 +1,4 @@
-import { addDays, dayRange, weekdayOf } from './dates';
+import { addDays, dayRange, toDayKey, weekdayOf } from './dates';
 import type { CheckIn, Habit } from './types';
 
 export interface StreakSummary {
@@ -28,7 +28,8 @@ export function computeStreak(
   const doneToday = done.has(today);
   if (habit.days.length === 0) return { current: 0, longest: 0, rate: 0, doneToday };
 
-  const created = habit.createdAt.slice(0, 10);
+  // createdAt is a UTC ISO timestamp; day keys are local dates.
+  const created = toDayKey(new Date(habit.createdAt));
   const earliestCheckIn = checkIns.reduce((min, c) => (c.day < min ? c.day : min), today);
   const start = created < earliestCheckIn ? created : earliestCheckIn;
 

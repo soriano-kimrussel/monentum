@@ -49,7 +49,8 @@ export function syncApi(core: Core, random: () => number = Math.random) {
         const meta = await getMeta(user.id);
         if (!meta.online) throw new ApiError('offline', 'You’re offline (simulated). Changes are saved locally and will sync later.');
         if (random() < meta.failureRate) {
-          await core.store.put('meta', metaKey(user.id), { ...meta, lastError: 'Simulated network error' });
+          // Sticky: the failure note must survive the rollback caused by the throw below.
+          await core.putSticky('meta', metaKey(user.id), { ...meta, lastError: 'Simulated network error' });
           throw new ApiError('sync_failed', 'Simulated network error. Your changes are still queued.');
         }
         const now = core.clock.now();

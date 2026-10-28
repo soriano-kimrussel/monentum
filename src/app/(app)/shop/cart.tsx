@@ -33,7 +33,9 @@ export default function Cart() {
   }
 
   const checkout = async () => {
-    const r = await run('checkout', (b, t) => b.market.checkout(t, lines, key.current));
+    // Only check out what is shown: lines for listings that were since removed are dropped.
+    const shown = priced.map(({ listingId, qty }) => ({ listingId, qty }));
+    const r = await run('checkout', (b, t) => b.market.checkout(t, shown, key.current));
     if (!r) return;
     setLastReplay(r.replayed);
     clear();

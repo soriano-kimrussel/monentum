@@ -64,7 +64,7 @@ export class Core {
   private sticky: { collection: string; id: string; doc: object }[] = [];
 
   /** Write that is kept even if the surrounding mutation fails. */
-  private async putSticky(collection: string, id: string, doc: object) {
+  async putSticky(collection: string, id: string, doc: object) {
     this.sticky.push({ collection, id, doc });
     await this.store.put(collection, id, doc);
   }
@@ -74,10 +74,26 @@ export class Core {
     return Date.now();
   }
 
+  /** Set by any write; lets mutate() skip change events for read-only calls. */
+  private dirty = false;
+  readonly store: DocStore;
+
   constructor(
-    readonly store: DocStore,
+    store: DocStore,
     readonly config: BackendConfig = DEFAULT_CONFIG,
-  ) {}
+  ) {
+    const mark = () => {
+      this.dirty = true;
+    };
+    this.store = {
+      get: (collection, id) => store.get(collection, id),
+      list: (collection, where) => store.list(collection, where),
+      put: (collection, id, doc) => (mark(), store.put(collection, id, doc)),
+      remove: (collection, id) => (mark(), store.remove(collection, id)),
+      transaction: (fn) => store.transaction(fn),
+      clear: (collection) => (mark(), store.clear(collection)),
+    };
+  }
 
   async init() {
     const meta = await this.store.get<{ offsetMs: number }>('meta', 'clock');
@@ -95,10 +111,14 @@ export class Core {
    * duplicate-reward checks) safe against concurrent taps.
    */
   mutate<R>(fn: () => Promise<R>): Promise<R> {
+    let changed = false;
     const run = this.queue.then(async () => {
       this.sticky = [];
+      this.dirty = false;
       try {
-        return await this.store.transaction(fn);
+        const result = await this.store.transaction(fn);
+        changed = this.dirty;
+        return result;
       } catch (e) {
         // The transaction rolled back, but security records about the failed attempt
         // (rate-limit counters, denied-access audit entries) must survive it.
@@ -110,7 +130,9 @@ export class Core {
     });
     this.queue = run.catch(() => undefined);
     return run.then((r) => {
-      this.listeners.forEach((l) => l());
+      // Only announce real changes. Read-style calls that go through the mutex (e.g. billing
+      // status reconciling nothing) would otherwise trigger refetch → mutate → refetch forever.
+      if (changed) this.listeners.forEach((l) => l());
       return r;
     });
   }

@@ -84,4 +84,12 @@ export class MemoryStore implements DocStore {
       this.persist?.(this.snapshot());
     }, 250);
   }
+
+  /** Write a pending debounced snapshot right away (e.g. when the page is being closed). */
+  flushNow() {
+    if (!this.pending) return;
+    clearTimeout(this.pending);
+    this.pending = null;
+    this.persist?.(this.snapshot());
+  }
 }

@@ -90,6 +90,32 @@ describe('webhooks (mock provider)', () => {
     expect(await backend.billing.receiveWebhook(body, signature)).toEqual({ status: 'duplicate' });
     expect((await backend.billing.status(token)).sub.status).toBe('refunded');
   });
+
+  it('refuses to refund a refund', async () => {
+    const { backend } = makeBackend();
+    const { token } = await signUp(backend);
+    const { txns } = await backend.billing.purchase(token, 'premium_monthly');
+    const first = backend.billing.signEvent('charge.refunded', { transactionId: txns[0].id });
+    await backend.billing.receiveWebhook(first.body, first.signature);
+    const refund = (await backend.billing.transactions(token)).find((t) => t.type === 'refund')!;
+    const again = backend.billing.signEvent('charge.refunded', { transactionId: refund.id });
+    await expect(backend.billing.receiveWebhook(again.body, again.signature)).rejects.toMatchObject({ code: 'not_refundable' });
+  });
+});
+
+describe('change events', () => {
+  it('only notifies subscribers when a call actually wrote data', async () => {
+    const { backend } = makeBackend();
+    const { token } = await signUp(backend);
+    await backend.billing.status(token); // first call may persist the initial subscription
+    const listener = jest.fn();
+    backend.subscribe(listener);
+    // A read through the mutex must not notify, or UI refetches would loop forever.
+    await backend.billing.status(token);
+    expect(listener).not.toHaveBeenCalled();
+    await backend.billing.startTrial(token, 'premium_monthly');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('referrals', () => {

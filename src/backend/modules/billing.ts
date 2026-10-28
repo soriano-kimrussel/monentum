@@ -290,6 +290,10 @@ async function issueRefund(core: Core, transactionId: string) {
   const txn = await core.store.get<Transaction>('transactions', transactionId);
   if (!txn) throw new ApiError('not_found', 'Transaction not found.');
   if (txn.status === 'refunded') return;
+  // Only successful paid charges can be refunded (not trials, failed charges or refunds themselves).
+  if (txn.status !== 'succeeded' || txn.type === 'refund' || txn.type === 'trial_start' || txn.amountCents <= 0) {
+    throw new ApiError('not_refundable', 'This transaction cannot be refunded.');
+  }
   const user = await core.store.get<User>('users', txn.userId);
   const sub = await core.store.get<Subscription>('subscriptions', txn.userId);
   if (!user || !sub) throw new ApiError('not_found', 'Account not found.');

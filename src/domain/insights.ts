@@ -1,4 +1,4 @@
-import { addDays, dayRange, parseDayKey } from './dates';
+import { addDays, dayRange, parseDayKey, toDayKey } from './dates';
 import { isScheduled } from './streaks';
 import type { CheckIn, Habit, MoodEntry } from './types';
 
@@ -16,7 +16,7 @@ export function dailyCompletion(habits: Habit[], checkIns: CheckIn[], today: str
     doneByDay.get(c.day)!.add(c.habitId);
   }
   return dayRange(addDays(today, -(days - 1)), today).map((day) => {
-    const live = habits.filter((h) => !h.archived && h.createdAt.slice(0, 10) <= day && isScheduled(h, day));
+    const live = habits.filter((h) => !h.archived && toDayKey(new Date(h.createdAt)) <= day && isScheduled(h, day));
     const done = doneByDay.get(day);
     return { day, scheduled: live.length, done: live.filter((h) => done?.has(h.id)).length };
   });

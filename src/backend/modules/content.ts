@@ -1,6 +1,6 @@
 // Habits, check-ins, goals, mood and journal. Every read is scoped to the caller and every
 // write re-checks ownership (the equivalent of `request.auth.uid == resource.data.userId`).
-import { addDays, toDayKey } from '../../domain/dates';
+import { addDays, isValidDayKey, toDayKey } from '../../domain/dates';
 import { isPremium, limitsFor, type Subscription } from '../../domain/subscription';
 import type { CheckIn, Goal, Habit, JournalEntry, MoodEntry, MoodScore, User, Weekday } from '../../domain/types';
 import { randomId } from '../../lib/crypto';
@@ -100,6 +100,7 @@ export function contentApi(core: Core) {
         const user = await core.authenticate(token);
         const habit = await core.owned<Habit>('habits', habitId, user);
         if (habit.archived) throw new ApiError('archived', 'This habit is archived.');
+        if (!isValidDayKey(day)) throw new ApiError('invalid_input', 'Invalid day.');
         const t = today();
         if (day > t) throw new ApiError('future_day', 'You can’t check in for a future day.');
         if (day < addDays(t, -BACKFILL_DAYS)) throw new ApiError('too_old', `Check-ins can be back-filled up to ${BACKFILL_DAYS} days.`);

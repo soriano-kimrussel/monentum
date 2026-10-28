@@ -13,13 +13,16 @@ export async function openStore(): Promise<DocStore> {
   } catch {
     initial = undefined;
   }
-  return new MemoryStore(initial, (snap) => {
+  const store = new MemoryStore(initial, (snap) => {
     try {
       globalThis.localStorage?.setItem(KEY, JSON.stringify(snap));
     } catch {
       // Storage full or blocked: keep working in memory.
     }
   });
+  // Writes are debounced; don't lose the last ones on refresh or tab close.
+  globalThis.addEventListener?.('pagehide', () => store.flushNow());
+  return store;
 }
 
 export async function wipeStore(store: DocStore) {

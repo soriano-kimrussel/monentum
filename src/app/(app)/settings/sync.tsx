@@ -5,7 +5,7 @@ import { Button, Card, Chip, Screen, SectionTitle, SimBanner, Stat } from '@/ui/
 import { colors, space, type } from '@/ui/theme';
 
 export default function Sync() {
-  const { data } = useQuery((b, t) => b.sync.status(t));
+  const { data, reload } = useQuery((b, t) => b.sync.status(t));
   const { run, busy } = useAction();
   if (!data) return null;
 
@@ -38,6 +38,7 @@ export default function Sync() {
         onPress={async () => {
           const r = await run('sync', (b, t) => b.sync.run(t));
           if (r) notify('Sync complete', `Pushed ${r.pushed}, pulled ${r.pulled}, conflicts ${r.conflicts}.`);
+          else reload(); // a failed run records lastError without a change event
         }}
       />
 

@@ -15,7 +15,7 @@ it('boots, seeds demo data, signs in the demo user and renders every user screen
   expect(screen.getByText('How are you feeling?')).toBeTruthy();
 
   // The UI guard bounces normal users away from admin routes (the backend also denies them).
-  act(() => router.push('/admin'));
+  await act(() => router.push('/admin'));
   await waitFor(() => expect(screen).toHavePathname('/'));
   expect(screen.queryByText('Subscriptions by status')).toBeNull();
 

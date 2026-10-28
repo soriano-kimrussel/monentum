@@ -4,14 +4,16 @@ import { act, fireEvent, screen, waitFor } from 'expo-router/testing-library';
 export const visible = (text: string | RegExp) => waitFor(() => expect(screen.getAllByText(text).length).toBeGreaterThan(0), { timeout: 30_000 });
 
 export async function go(path: string) {
-  act(() => router.push(path as never));
+  await act(() => router.push(path as never));
   await waitFor(() => expect(screen).toHavePathname(path), { timeout: 15_000 });
 }
 
 export async function signInAs(button: 'Demo user' | 'Admin') {
   await visible('Demo accounts');
-  fireEvent.press(screen.getByText(button));
-  fireEvent.press(screen.getByTestId('sign-in'));
+  // fireEvent is async in RNTL 14: an un-awaited press leaves its act() scope open and
+  // later updates (e.g. router.push) are never flushed.
+  await fireEvent.press(screen.getByText(button));
+  await fireEvent.press(screen.getByTestId('sign-in'));
   await visible('Today’s habits');
 }
 

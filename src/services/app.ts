@@ -5,7 +5,9 @@ import { createBackend, type Backend } from '../backend';
 import { seedIfNeeded } from '../backend/seed';
 import type { DocStore } from '../data/DocStore';
 import { randomId, setRandomSource } from '../lib/crypto';
+import { useCart } from '../stores/cart';
 import { useSession } from '../stores/session';
+import { syncReminders } from './notifications';
 import { openStore, wipeStore } from './openStore';
 
 let backend: Backend | null = null;
@@ -68,6 +70,10 @@ export async function signOut() {
   const { token } = useSession.getState();
   if (token && backend) await backend.auth.signOut(token).catch(() => undefined);
   await persistToken(null);
+  // Don't leak the previous user's reminders, cart or pending invite into the next session.
+  await syncReminders([]).catch(() => undefined);
+  useCart.getState().clear();
+  useSession.getState().setInvite({ referralCode: undefined, campaignCode: undefined });
   useSession.getState().clear();
   router.replace('/sign-in');
 }
