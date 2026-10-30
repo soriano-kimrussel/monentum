@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
-import { colors, radius, space, type } from './theme';
+import { colors, radius, shadow, space, type } from './theme';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -83,7 +83,7 @@ export function Button({
   testID?: string;
 }) {
   const palette: Record<ButtonVariant, { bg: string; fg: string; border?: string }> = {
-    primary: { bg: colors.primary, fg: '#fff' },
+    primary: { bg: colors.primary, fg: colors.onPrimary },
     secondary: { bg: colors.primarySoft, fg: colors.primary },
     ghost: { bg: 'transparent', fg: colors.primary, border: colors.border },
     danger: { bg: colors.dangerSoft, fg: colors.danger },
@@ -136,7 +136,7 @@ export function Chip({ label, selected, onPress, color = colors.primary }: { lab
       accessibilityRole="button"
       accessibilityState={{ selected: !!selected }}
       style={[styles.chip, selected ? { backgroundColor: color, borderColor: color } : null]}>
-      <Text style={[styles.chipText, selected && { color: '#fff' }]}>{label}</Text>
+      <Text style={[styles.chipText, selected && { color: colors.onPrimary }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -272,22 +272,20 @@ export function Divider() {
 
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: space.lg, paddingBottom: space.xxl * 2 },
+  content: { padding: space.lg, paddingBottom: space.xxl * 3 },
   row: { flexDirection: 'row', alignItems: 'center' },
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     padding: space.lg,
     marginBottom: space.md,
-    shadowColor: '#1B1830',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 1,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    ...shadow,
   },
-  button: { minHeight: 48, borderRadius: radius.md, paddingHorizontal: space.lg, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  button: { minHeight: 50, borderRadius: radius.pill, paddingHorizontal: space.lg, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   buttonSmall: { minHeight: 36, paddingHorizontal: space.md },
-  buttonText: { fontSize: 15.5, fontWeight: '700' },
+  buttonText: { fontSize: 15.5, fontWeight: '600', letterSpacing: 0.1 },
   label: { ...type.small, fontWeight: '600', color: colors.text, marginBottom: 6 },
   input: {
     backgroundColor: colors.card,
@@ -307,10 +305,10 @@ export const styles = StyleSheet.create({
   pillText: { fontSize: 11.5, fontWeight: '700' },
   emptyIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
   listRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 12 },
-  rowIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  rowIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   sim: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.simSoft, borderRadius: radius.md, padding: space.md, marginBottom: space.md },
-  segment: { flexDirection: 'row', backgroundColor: colors.border, borderRadius: radius.md, padding: 3, marginBottom: space.md },
-  segmentItem: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: radius.sm },
+  segment: { flexDirection: 'row', backgroundColor: colors.primarySoft, borderRadius: radius.pill, padding: 3, marginBottom: space.md },
+  segmentItem: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: radius.pill },
   segmentActive: { backgroundColor: colors.card },
   segmentText: { fontWeight: '600', color: colors.muted, fontSize: 13.5 },
 });

@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { StreakSummary } from '../domain/streaks';
 import type { Habit } from '../domain/types';
 import type { IconName } from './components';
-import { colors, radius, space, type } from './theme';
+import { colors, radius, shadow, space, type } from './theme';
 
 export function HabitRow({ habit, stats, onToggle, onPress, busy }: { habit: Habit; stats: StreakSummary; onToggle?: () => void; onPress?: () => void; busy?: boolean }) {
   const done = stats.doneToday;
@@ -19,6 +19,9 @@ export function HabitRow({ habit, stats, onToggle, onPress, busy }: { habit: Hab
         borderRadius: radius.lg,
         padding: space.md,
         marginBottom: space.sm,
+        borderWidth: 1,
+        borderColor: colors.border,
+        ...shadow,
         opacity: pressed ? 0.85 : habit.archived ? 0.55 : 1,
       })}
       accessibilityRole="button"
@@ -31,7 +34,7 @@ export function HabitRow({ habit, stats, onToggle, onPress, busy }: { habit: Hab
           {habit.name}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-          <Ionicons name="flame" size={13} color={stats.current ? '#F08C00' : colors.faint} />
+          <Ionicons name="flame" size={13} color={stats.current ? colors.warning : colors.faint} />
           <Text style={[type.small, { marginLeft: 3 }]}>
             {stats.current} day streak · {Math.round(stats.rate * 100)}% (30d)
           </Text>
@@ -59,7 +62,7 @@ export function HabitRow({ habit, stats, onToggle, onPress, busy }: { habit: Hab
             justifyContent: 'center',
             opacity: busy ? 0.5 : 1,
           }}>
-          {done && <Ionicons name="checkmark" size={22} color="#fff" />}
+          {done && <Ionicons name="checkmark" size={22} color={colors.onPrimary} />}
         </Pressable>
       )}
     </Pressable>
