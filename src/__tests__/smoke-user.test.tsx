@@ -11,7 +11,8 @@ it('boots, seeds demo data, signs in the demo user and renders every user screen
 
   // Signed out → sent to sign-in once the local backend has booted and seeded.
   await signInAs('Demo user');
-  expect(screen.getByText('Morning walk')).toBeTruthy();
+  // Shown in the focus card ("next up") and in the habit list.
+  expect(screen.getAllByText('Morning walk').length).toBeGreaterThan(0);
   expect(screen.getByText('How are you feeling?')).toBeTruthy();
 
   // The UI guard bounces normal users away from admin routes (the backend also denies them).

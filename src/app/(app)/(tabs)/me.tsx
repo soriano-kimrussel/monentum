@@ -32,7 +32,7 @@ export default function Me() {
     <Screen>
       <Card style={{ flexDirection: 'row', alignItems: 'center' }}>
         <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: '#fff', fontWeight: '800', fontSize: 20 }}>{user?.displayName.slice(0, 1).toUpperCase()}</Text>
+          <Text style={{ color: colors.onPrimary, fontWeight: '700', fontSize: 20 }}>{user?.displayName.slice(0, 1).toUpperCase()}</Text>
         </View>
         <View style={{ marginLeft: space.md, flex: 1 }}>
           <Text style={type.subtitle}>{user?.displayName}</Text>

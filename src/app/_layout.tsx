@@ -20,16 +20,16 @@ export default function RootLayout() {
   if (status !== 'ready') {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary, padding: 24 }}>
-        <Text style={[type.hero, { color: '#fff', fontSize: 34 }]}>Momentum</Text>
+        <Text style={[type.hero, { color: colors.onPrimary, fontSize: 34 }]}>Momentum</Text>
         {status === 'error' ? (
           <>
-            <Text style={{ color: '#fff', marginVertical: 16, textAlign: 'center' }}>Couldn’t start: {bootError}</Text>
+            <Text style={{ color: colors.onPrimary, marginVertical: 16, textAlign: 'center' }}>Couldn’t start: {bootError}</Text>
             <Button title="Try again" variant="secondary" onPress={() => boot()} />
           </>
         ) : (
           <>
             <ActivityIndicator color="#fff" style={{ marginTop: 20 }} />
-            <Text style={{ color: '#E8E4FF', marginTop: 10, fontSize: 13 }}>Preparing your local demo data…</Text>
+            <Text style={{ color: colors.onPrimaryMuted, marginTop: 10, fontSize: 13 }}>Preparing your local demo data…</Text>
           </>
         )}
       </View>

@@ -45,9 +45,9 @@ async function seed(core: Core) {
 
   // Demo user's history: 4 habits, ~8 weeks of check-ins with a realistic, improving pattern.
   const habitDefs: [string, string, string, Weekday[], number][] = [
-    ['Morning walk', 'walk', '#2F9E77', ALL_DAYS, 0.82],
-    ['Read 20 pages', 'book', '#4C6EF5', ALL_DAYS, 0.7],
-    ['Meditate', 'leaf', '#AE3EC9', [1, 2, 3, 4, 5], 0.6],
+    ['Morning walk', 'walk', '#5E8C6A', ALL_DAYS, 0.82],
+    ['Read 20 pages', 'book', '#5B8BA6', ALL_DAYS, 0.7],
+    ['Meditate', 'leaf', '#8B7BB8', [1, 2, 3, 4, 5], 0.6],
   ];
   const today = toDayKey(new Date(nowMs));
   const habits: Habit[] = [];
